@@ -9,7 +9,7 @@ app = FastAPI()
 dataset = pd.read_parquet("Datasets/steam_games.parquet").copy()
 
 # Creamos el primer endpoint de la API
-@app.get("/")
+@app.get("/Informacion")
 def developerInfo(developer : str):
     # Creamos un DataFrame con las columnas que nos interesan
     data = dataset[["id_app", "developer", "release_year", "price"]]
@@ -43,11 +43,11 @@ def developerInfo(developer : str):
 
 # Cargamos los datos del archivo "steam_games.parquet" en un DataFrame
 data_pre = pd.read_parquet("Datasets/steam_games.parquet")
-data = data_pre.sample(frac = 0.1, random_state = 1)
+data = data_pre.sample(frac = 0.3, random_state = 1)
 
-# Creamos la representación númerica de las columnas "id_app" y "genres" usando TfidfVectorizer
+# Creamos la representación númerica de las columnas "app_name" y "genres" usando TfidfVectorizer
 vectorizer = TfidfVectorizer()
-tfidf_id_app = vectorizer.fit_transform(data["id_app"])
+tfidf_id_app = vectorizer.fit_transform(data["app_name"])
 tfidf_genres = vectorizer.fit_transform(data["genres"])
 
 # Apilamos las columnas que vamos a usar para el modelo de recomendación en una matriz
@@ -74,14 +74,14 @@ def gameRecomendation(item_name: str):
         # Usamos el indice para encontrar items similares
         item_similarities = similarity_matrix[item_index]
         
-        # Ordenamos los items recomendados de acuerdo a su similitud
+        # Ordenamos los items recomendados de acuerdo a su similitud con el juego dado y seleccionamos los 5 primeros sin contar el juego a partir del cual hacemos la recomendación
         most_similar_item_indices = np.argsort(-item_similarities)
-        most_similar_items = data.loc[most_similar_item_indices, "app_name"][:5]
+        most_similar_items = data.loc[most_similar_item_indices, "app_name"][1:6]
         
         # Devolvemos el resultado en el formato requerido
-        response_list = []
+        response_dic = {}
         for i in range(5):
-            response_list.append(most_similar_items["app_name"].iloc[i])
-        return response_list
+            response_dic[i + 1] = most_similar_items.iloc[i]
+        return response_dic
     else:
         return "Item no existente. Verifique la sintaxis"

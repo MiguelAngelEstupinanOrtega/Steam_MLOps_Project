@@ -9,7 +9,7 @@ app = FastAPI()
 dataset = pd.read_parquet("Datasets/steam_games.parquet").copy()
 
 # Creamos el primer endpoint de la API
-@app.get("/Informacion")
+@app.get("/developerInfo/{developer}")
 def developerInfo(developer : str):
     # Creamos un DataFrame con las columnas que nos interesan
     data = dataset[["id_app", "developer", "release_year", "price"]]
@@ -60,7 +60,7 @@ similarity_matrix = cosine_similarity(features_matrix)
 data = data.reset_index(drop = True)
 
 # Creamos el endpoint de la API para el modelo de recomendación
-@app.get("/Recomendacion")
+@app.post("/gameRecomendation/{item_name}")
 def gameRecomendation(item_name: str):
     # Creamos la máscara para obtener el item a partir de el cuál se va a hacer la recomendación
     mask = data["app_name"] == item_name

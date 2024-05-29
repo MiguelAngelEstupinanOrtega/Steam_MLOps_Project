@@ -12,7 +12,7 @@ dataset = pd.read_parquet("Datasets/steam_games.parquet").copy()
 @app.get("/developerInfo/{developer}")
 def developerInfo(developer : str):
     # Creamos un DataFrame con las columnas que nos interesan
-    data = dataset[["id_app", "developer", "release_year", "price"]]
+    data = dataset[["id_app", "developer", "release_year", "price"]].copy()
     
     # Aplicamos una máscara para filtrar por desarrollador
     mask = data["developer"] == developer
@@ -42,10 +42,7 @@ def developerInfo(developer : str):
 # Realizamos ahora el modelo de recomendación
 
 # Cargamos los datos del archivo "steam_games.parquet" en un DataFrame
-data_pre = pd.read_parquet("Datasets/steam_games.parquet")
-data = data_pre.sample(frac = 0.25, random_state = 1)
-
-print(data["app_name"].head(25))
+data = dataset.sample(frac = 0.10, random_state = 1)
 
 # Creamos la representación númerica de las columnas "app_name" y "genres" usando TfidfVectorizer
 vectorizer = TfidfVectorizer()

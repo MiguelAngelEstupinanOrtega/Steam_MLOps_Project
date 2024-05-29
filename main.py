@@ -43,7 +43,9 @@ def developerInfo(developer : str):
 
 # Cargamos los datos del archivo "steam_games.parquet" en un DataFrame
 data_pre = pd.read_parquet("Datasets/steam_games.parquet")
-data = data_pre.sample(frac = 0.3, random_state = 1)
+data = data_pre.sample(frac = 0.25, random_state = 1)
+
+print(data["app_name"].head(25))
 
 # Creamos la representación númerica de las columnas "app_name" y "genres" usando TfidfVectorizer
 vectorizer = TfidfVectorizer()

@@ -1,10 +1,14 @@
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 from fastapi import FastAPI
 import pandas as pd
+import numpy as np
 
 app = FastAPI()
 
 dataset = pd.read_parquet("Datasets/steam_games.parquet").copy()
 
+# Creamos el primer endpoint de la API
 @app.get("/")
 def developerInfo(developer : str):
     # Creamos un DataFrame con las columnas que nos interesan
@@ -34,3 +38,50 @@ def developerInfo(developer : str):
         }
     
     return response_dic
+
+# Realizamos ahora el modelo de recomendación
+
+# Cargamos los datos del archivo "steam_games.parquet" en un DataFrame
+data_pre = pd.read_parquet("Datasets/steam_games.parquet")
+data = data_pre.sample(frac = 0.1, random_state = 1)
+
+# Creamos la representación númerica de las columnas "id_app" y "genres" usando TfidfVectorizer
+vectorizer = TfidfVectorizer()
+tfidf_id_app = vectorizer.fit_transform(data["id_app"])
+tfidf_genres = vectorizer.fit_transform(data["genres"])
+
+# Apilamos las columnas que vamos a usar para el modelo de recomendación en una matriz
+features_matrix = np.column_stack([tfidf_id_app.toarray(), data["release_year"], data["price"], tfidf_genres.toarray()])
+
+# Calculamos la similitud del coseno de la matriz
+similarity_matrix = cosine_similarity(features_matrix)
+
+# Reiniciamos el indice a partir de 0 para ordenar los items
+data = data.reset_index(drop = True)
+
+# Creamos el endpoint de la API para el modelo de recomendación
+@app.get("/Recomendacion")
+def gameRecomendation(item_name: str):
+    # Creamos la máscara para obtener el item a partir de el cuál se va a hacer la recomendación
+    mask = data["app_name"] == item_name
+    item = data[mask]
+    
+    # Creamos una condición para depurar un posible error
+    if not item.empty:
+        # Extraemos el indice de 
+        item_index = item.index[0]
+        
+        # Usamos el indice para encontrar items similares
+        item_similarities = similarity_matrix[item_index]
+        
+        # Ordenamos los items recomendados de acuerdo a su similitud
+        most_similar_item_indices = np.argsort(-item_similarities)
+        most_similar_items = data.loc[most_similar_item_indices, "app_name"][:5]
+        
+        # Devolvemos el resultado en el formato requerido
+        response_list = []
+        for i in range(5):
+            response_list.append(most_similar_items["app_name"].iloc[i])
+        return response_list
+    else:
+        return "Item no existente. Verifique la sintaxis"

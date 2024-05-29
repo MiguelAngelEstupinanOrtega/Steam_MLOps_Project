@@ -60,7 +60,7 @@ similarity_matrix = cosine_similarity(features_matrix)
 data = data.reset_index(drop = True)
 
 # Creamos el endpoint de la API para el modelo de recomendación
-@app.post("/gameRecomendation/{item_name}")
+@app.get("/gameRecomendation/{item_name}")
 def gameRecomendation(item_name: str):
     # Creamos la máscara para obtener el item a partir de el cuál se va a hacer la recomendación
     mask = data["app_name"] == item_name
